@@ -7,10 +7,10 @@ import cz.edu.x3m.processing.compilation.impl.CompileResult;
 import cz.edu.x3m.processing.execution.IExecutionResult;
 import cz.edu.x3m.processing.execution.IExecutionSetting;
 import cz.edu.x3m.processing.execution.impl.ExecutionResult;
+import cz.edu.x3m.processing.execution.impl.IOUtils;
 import cz.edu.x3m.utils.IniParser;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -21,22 +21,19 @@ import java.util.List;
  */
 public class JavaLanguage implements ICompilableLanguage {
 
-    private static final String COMPILE_PATH = "./bin/java/java-compile.sh";
-    private static final String EXEC_PATH = "./bin/java/java-exec.sh";
+    private static final String COMPILE_PATH = "javac";
+    private static final String EXEC_PATH = "java";
     private static final String EXT_JAVA = ".java";
     private static final String EXT_CLASS = ".class";
     private static final String EXT_INI = ".ini";
     //
     private ICompileSetting compileSettings;
-    private String compileOutputPath;
     private String compileErrorPath;
     private String compileMainFileName;
     private String compileSourceDirectory;
     private String compileMainFilePath;
     //
     private IExecutionSetting executionSettings;
-    private String executionInputPath;
-    private String executionOutputPath;
     private String executionErrorPath;
     private String executionMainFileName;
     private String executionSourceDirectory;
@@ -57,7 +54,6 @@ public class JavaLanguage implements ICompilableLanguage {
 
     @Override
     public void preCompilation () throws Exception {
-        this.compileOutputPath = compileSettings.getOutputPath ();
         this.compileErrorPath = compileSettings.getErrorPath ();
         this.compileSourceDirectory = compileSettings.getSourceDirectoryPath ();
 
@@ -70,38 +66,48 @@ public class JavaLanguage implements ICompilableLanguage {
             throw new Exception ("Cannot locate main java file");
         this.compileMainFilePath = mainFilePath.getAbsolutePath ();
 
-
         // info file
         this.compileInfoFile = new File (
-                compileSourceDirectory.concat (File.separator).concat (compileMainFileName).concat (".compile").concat (EXT_INI));
+                compileSourceDirectory
+                .concat (File.separator)
+                .concat (compileMainFileName)
+                .concat (".compile")
+                .concat (EXT_INI));
     }
 
 
 
     @Override
     public ICompileResult compile () {
-        List<String> command = new ArrayList<> ();
+        List<String> command = compileSettings.getCommandBase ();
+        // javac -sourcepath SOURCEPATH -d DESTINATION SOURCE
         command.add (COMPILE_PATH);
-        command.add ("-c");
+        command.add ("-sourcepath");
         command.add (compileSourceDirectory);
-        command.add ("-s");
-        command.add (compileMainFilePath);
         command.add ("-d");
         command.add (compileSourceDirectory);
-        command.add ("-o");
-        command.add (compileOutputPath);
-        command.add ("-e");
-        command.add (compileErrorPath);
+        command.add (compileMainFilePath);
+
+
 
         try {
-            ProcessBuilder processBuilder = new ProcessBuilder (command);
             System.out.println (command);
+            ProcessBuilder processBuilder = new ProcessBuilder (command);
             processBuilder.redirectOutput (compileInfoFile);
-            Process compileProcess = processBuilder.start ();
-            // TODO ini parser
-            int exitValue = compileProcess.waitFor ();
+            Process executionProcess = processBuilder.start ();
+            executionProcess.waitFor ();
 
-            return new CompileResult (exitValue);
+            // loads details
+            IniParser parser = new IniParser (compileInfoFile);
+            
+            // parsing
+            int runTime = Integer.parseInt (parser.get ("run-time"));
+            int memoryAvg = Integer.parseInt (parser.get ("memory-avg"));
+            int lineCount = Integer.parseInt (parser.get ("line-count"));
+            int exitValue = Integer.parseInt (parser.get ("exit-value"));
+            final String error = IOUtils.readAll (compileErrorPath);
+
+            return new CompileResult (exitValue, runTime, memoryAvg, lineCount, error);
         } catch (IOException | InterruptedException e) {
             return new CompileResult (e);
         }
@@ -125,11 +131,10 @@ public class JavaLanguage implements ICompilableLanguage {
 
 
     @Override
-    public void preExecution () throws Exception{
-        executionInputPath = executionSettings.getInputPath ();
-        executionOutputPath = executionSettings.getOutputPath ();
-        executionErrorPath = executionSettings.getErrorPath ();
-        executionSourceDirectory = executionSettings.getSourceDirectoryPath ();
+    public void preExecution () throws Exception {
+        this.executionErrorPath = executionSettings.getErrorPath ();
+        this.executionSourceDirectory = executionSettings.getSourceDirectoryPath ();
+
 
         // try to find main class file
         executionMainFileName = executionSettings.getMainFileName ();
@@ -151,33 +156,31 @@ public class JavaLanguage implements ICompilableLanguage {
 
     @Override
     public IExecutionResult execute () {
-        List<String> command = new ArrayList<> ();
+        List<String> command = executionSettings.getCommandBase ();
+        // java -classpath CLASSPATH CLASS
         command.add (EXEC_PATH);
-        command.add ("-c");
+        command.add ("-classpath");
         command.add (executionSourceDirectory);
-        command.add ("-s");
         command.add (executionMainFileClass);
-        command.add ("-i");
-        command.add (executionInputPath);
-        command.add ("-o");
-        command.add (executionOutputPath);
-        command.add ("-e");
-        command.add (executionErrorPath);
 
         try {
+            System.out.println (command);
             ProcessBuilder processBuilder = new ProcessBuilder (command);
             processBuilder.redirectOutput (executionInfoFile);
             Process executionProcess = processBuilder.start ();
-
             executionProcess.waitFor ();
+
+            // loads details
             IniParser parser = new IniParser (executionInfoFile);
-
+            
+            // parsing
             int runTime = Integer.parseInt (parser.get ("run-time"));
-            int memoryPeak = Integer.parseInt (parser.get ("memory-peak"));
-            int exitValue = Integer.parseInt(parser.get ("exit-value"));
-            int lineCount = Integer.parseInt(parser.get ("line-count"));
+            int memoryAvg = Integer.parseInt (parser.get ("memory-avg"));
+            int lineCount = Integer.parseInt (parser.get ("line-count"));
+            int exitValue = Integer.parseInt (parser.get ("exit-value"));
+            final String error = IOUtils.readAll (executionErrorPath);
 
-            return new ExecutionResult (exitValue, runTime, memoryPeak, lineCount);
+            return new ExecutionResult (exitValue, runTime, memoryAvg, lineCount, error);
         } catch (IOException | InterruptedException e) {
             return new ExecutionResult (e);
         }

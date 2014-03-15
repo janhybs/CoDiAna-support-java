@@ -1,8 +1,9 @@
 #!/bin/bash
+#  
 
 
 function usage () {
-	echo "Usage: $0 -c <path> -s <path> -d <path> [ <options> ]" 1>&2;
+	echo "Usage: $0 -c <path> -s <path> [ <options> ]" 1>&2;
 	echo "  -c <path>           classpath, where solution structure begins, source files ale located" 1>&2;
 	echo "  -s <path>           startpath, main class path (start file with static main method, e.g. cz.tul.nti.Scitani)" 1>&2;
 
@@ -65,6 +66,9 @@ function getDuration () {
 	DURATION=`echo "scale=0;((${ENDTIME}-${STARTTIME})*1000)/1" | bc`
 }
 
+function numLines () {
+	LINECOUNT=$(wc -l ${OUTPUT} | awk '{print $1}')
+}
 
 #------------------------------------------------------------------
 
@@ -78,7 +82,7 @@ ERROR=/dev/null
 
 
 
-while getopts ":c:s:d:t:m:i:o:e:hv" o; do
+while getopts ":c:s:t:m:i:o:e:hv" o; do
     case "${o}" in
         c)
 			# classpath
@@ -157,9 +161,9 @@ STARTTIME=$(date +%s.%N)
 
 	# start javac and get PID
 	if [ -z "${INPUT}" ]; then
-		timeout ${MAXTIME} java -classpath ${CLASSPATH} ${STARTPATH} > "${OUTPUT}" 2> "${ERROR}" & PID=$!
+		java -classpath ${CLASSPATH} ${STARTPATH} > "${OUTPUT}" 2> "${ERROR}" & PID=$!
 	else
-		timeout ${MAXTIME} java -classpath ${CLASSPATH} ${STARTPATH} > "${OUTPUT}" 2> "${ERROR}" < "${INPUT}" & PID=$!
+		java -classpath ${CLASSPATH} ${STARTPATH} > "${OUTPUT}" 2> "${ERROR}" < "${INPUT}" & PID=$!
 	fi
 
 	# attach async measurements
@@ -168,11 +172,8 @@ STARTTIME=$(date +%s.%N)
 
 	# wait to finish
 		(sleep $MAXTIME && kill $PID) 2>/dev/null & WATCHER=$!
-		if wait $PID 2>/dev/null; then
-			EXITVALUE=$?
-		else
-			EXITVALUE=124
-		fi
+		wait $PID 2>/dev/null;
+		EXITVALUE=$?
 		kill $WATCHER 2>/dev/null
 
 	# retrieve results from files
@@ -187,11 +188,14 @@ ENDTIME=$(date +%s.%N)
 
 # get run time
 getDuration
+numLines
 
 
 echo "run-time=${DURATION}"
 echo "memory-peak=${TOTALMEMORY}"
+echo "line-count=${LINECOUNT}";
 echo "exit-value=${EXITVALUE}";
+
 exit ${EXITVALUE};
 
 

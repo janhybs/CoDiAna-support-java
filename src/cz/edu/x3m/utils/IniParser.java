@@ -21,7 +21,7 @@ public class IniParser {
         properties.load (new FileInputStream (outputFile));
 
         for (String key : properties.stringPropertyNames ()) {
-            map.put (key, properties.getProperty (key));
+            map.put (key.trim (), properties.getProperty (key).trim ());
         }
     }
 

@@ -6,29 +6,29 @@ import cz.edu.x3m.processing.execution.IExecutionResult;
  *
  * @author Jan Hybs <x3mSpeedy@gmail.com>
  */
-public class ExecutionResult implements IExecutionResult {
+public final class ExecutionResult implements IExecutionResult {
 
     private Throwable throwable = null;
-    private String details = null;
+    private String error = null;
     private int exitValue = -1;
     private int runTime = -1;
-    private int memoryPeak = -1;
-    private int lineCount;
+    private int memoryAvg = -1;
+    private int lineCount = -1;
 
 
 
-    public ExecutionResult (int exitValue, int runTime, int memoryPeak, int lineCount) {
+    public ExecutionResult (int exitValue, int runTime, int memoryPeak, int lineCount, String error) {
         this.exitValue = exitValue;
         this.runTime = runTime;
-        this.memoryPeak = memoryPeak;
+        this.memoryAvg = memoryPeak;
         this.lineCount = lineCount;
+        this.error = error == null ? "" : error;
     }
 
 
 
     public ExecutionResult (Throwable throwable) {
         this.throwable = throwable;
-        this.details = throwable.getMessage ();
     }
 
 
@@ -48,22 +48,8 @@ public class ExecutionResult implements IExecutionResult {
 
 
     @Override
-    public String getDetails () {
-        return details;
-    }
-
-
-
-    @Override
-    public boolean isSuccessful () {
-        return exitValue == 0;
-    }
-
-
-
-    @Override
-    public boolean isInterrupted () {
-        return exitValue == 1;
+    public String getError () {
+        return error;
     }
 
 
@@ -76,8 +62,8 @@ public class ExecutionResult implements IExecutionResult {
 
 
     @Override
-    public int getMemoryPeak () {
-        return memoryPeak;
+    public int getMemoryAvg () {
+        return memoryAvg;
     }
 
 

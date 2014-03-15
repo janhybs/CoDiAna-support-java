@@ -161,11 +161,8 @@ STARTTIME=$(date +%s.%N)
 
 	# wait to finish
 		(sleep $MAXTIME && kill $PID) 2>/dev/null & WATCHER=$!
-		if wait $PID 2>/dev/null; then
-			EXITVALUE=$?
-		else
-			EXITVALUE=124
-		fi
+		wait $PID 2>/dev/null
+		EXITVALUE=$?
 		kill $WATCHER 2>/dev/null
 
 	# retrieve results from files

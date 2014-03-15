@@ -7,22 +7,28 @@ import cz.edu.x3m.processing.compilation.ICompileResult;
  * @author Jan Hybs <x3mSpeedy@gmail.com>
  */
 public class CompileResult implements ICompileResult {
-    
+
     private Throwable throwable = null;
-    private String details = null;
+    private String error = null;
     private int exitValue = -1;
+    private int runTime = -1;
+    private int memoryAvg = -1;
+    private int lineCount = -1;
 
 
 
-    public CompileResult (int exitValue) {
+    public CompileResult (int exitValue, int runTime, int memoryPeak, int lineCount, String error) {
         this.exitValue = exitValue;
+        this.runTime = runTime;
+        this.memoryAvg = memoryPeak;
+        this.lineCount = lineCount;
+        this.error = error == null ? "" : error;
     }
 
 
 
     public CompileResult (Throwable throwable) {
         this.throwable = throwable;
-        this.details = throwable.getMessage ();
     }
 
 
@@ -42,23 +48,28 @@ public class CompileResult implements ICompileResult {
 
 
     @Override
-    public String getDetails () {
-        return details;
+    public String getError () {
+        return error;
     }
 
 
 
     @Override
-    public boolean isSuccessful () {
-        return exitValue == 0;
+    public int getRunTime () {
+        return runTime;
     }
 
 
 
     @Override
-    public boolean isInterrupted () {
-        return exitValue == 1;
+    public int getMemoryAvg () {
+        return memoryAvg;
     }
 
-    
+
+
+    @Override
+    public int getLineCount () {
+        return lineCount;
+    }
 }
