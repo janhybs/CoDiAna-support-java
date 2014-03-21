@@ -1,5 +1,7 @@
 package cz.edu.x3m.processing.execution;
 
+import cz.edu.x3m.processing.exception.RunException;
+
 /**
  *
  * @author Jan Hybs
@@ -10,7 +12,7 @@ public interface IExecutableLanguage {
 
 
 
-    void preExecution () throws Exception;
+    void preExecution () throws RunException;
 
 
 
@@ -18,5 +20,5 @@ public interface IExecutableLanguage {
 
 
 
-    void postExecution () throws Exception;
+    void postExecution () throws RunException;
 }

@@ -1,5 +1,6 @@
 package cz.edu.x3m.processing.compilation;
 
+import cz.edu.x3m.processing.exception.RunException;
 import cz.edu.x3m.processing.execution.IExecutableLanguage;
 
 /**
@@ -12,7 +13,7 @@ public interface ICompilableLanguage extends IExecutableLanguage {
 
 
 
-    void preCompilation () throws Exception;
+    void preCompilation () throws RunException;
 
 
 
@@ -20,5 +21,5 @@ public interface ICompilableLanguage extends IExecutableLanguage {
 
 
 
-    void postCompilation () throws Exception;
+    void postCompilation () throws RunException;
 }

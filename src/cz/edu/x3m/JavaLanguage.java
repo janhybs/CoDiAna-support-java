@@ -4,6 +4,7 @@ import cz.edu.x3m.processing.compilation.ICompilableLanguage;
 import cz.edu.x3m.processing.compilation.ICompileResult;
 import cz.edu.x3m.processing.compilation.ICompileSetting;
 import cz.edu.x3m.processing.compilation.impl.CompileResult;
+import cz.edu.x3m.processing.exception.RunException;
 import cz.edu.x3m.processing.execution.IExecutionResult;
 import cz.edu.x3m.processing.execution.IExecutionSetting;
 import cz.edu.x3m.processing.execution.impl.ExecutionResult;
@@ -53,7 +54,7 @@ public class JavaLanguage implements ICompilableLanguage {
 
 
     @Override
-    public void preCompilation () throws Exception {
+    public void preCompilation () throws RunException {
         this.compileErrorPath = compileSettings.getErrorPath ();
         this.compileSourceDirectory = compileSettings.getSourceDirectoryPath ();
 
@@ -63,7 +64,7 @@ public class JavaLanguage implements ICompilableLanguage {
 
         //otherwise invalidate pre compilation
         if (mainFilePath == null)
-            throw new Exception ("Cannot locate main java file");
+            throw new RunException ("Cannot locate main java file");
         this.compileMainFilePath = mainFilePath.getAbsolutePath ();
 
         // info file
@@ -116,7 +117,7 @@ public class JavaLanguage implements ICompilableLanguage {
 
 
     @Override
-    public void postCompilation () throws Exception {
+    public void postCompilation () throws RunException {
     }
 
 
@@ -131,7 +132,7 @@ public class JavaLanguage implements ICompilableLanguage {
 
 
     @Override
-    public void preExecution () throws Exception {
+    public void preExecution () throws RunException {
         this.executionErrorPath = executionSettings.getErrorPath ();
         this.executionSourceDirectory = executionSettings.getSourceDirectoryPath ();
 
@@ -140,12 +141,12 @@ public class JavaLanguage implements ICompilableLanguage {
         executionMainFileName = executionSettings.getMainFileName ();
         File mainFilePath = findFile (executionMainFileName.concat (EXT_CLASS), new File (executionSourceDirectory));
         if (mainFilePath == null)
-            throw new Exception ("Cannot locate main class file");
+            throw new RunException ("Cannot locate main class file");
 
         // generate class string
         executionMainFileClass = getClassPath (mainFilePath, new File (executionSourceDirectory));
         if (executionMainFileClass == null)
-            throw new Exception ("Cannot locate main class file");
+            throw new RunException ("Cannot locate main class file");
 
         // info file
         this.executionInfoFile = new File (
@@ -189,7 +190,7 @@ public class JavaLanguage implements ICompilableLanguage {
 
 
     @Override
-    public void postExecution () throws Exception {
+    public void postExecution () throws RunException {
 //        if (executionInfoFile != null && executionInfoFile.exists ())
 //            executionInfoFile.delete ();
     }
